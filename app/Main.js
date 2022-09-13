@@ -1,17 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import Header from './components/Header';
+import HomeGuest from './components/HomeGuest';
+import Footer from './components/Footer';
 
-function ExampleComponent() {
+function Main() {
   return (
-    <div>
-      <h1>The sky is blue!!!</h1>
-      <p>The sky</p>
-    </div>
+    <>
+      <Header />
+      <HomeGuest />
+      <Footer />
+    </>
   );
 }
 
 const root = ReactDOM.createRoot(document.querySelector('#app'));
-root.render(<ExampleComponent />);
+root.render(<Main />);
 
 if (module.hot) {
   module.hot.accept();
