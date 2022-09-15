@@ -1,16 +1,19 @@
 import Axios from 'axios';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Page from './Page';
 
 function CreatePost() {
   const [title, setTitle] = useState();
   const [body, setBody] = useState();
+  const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      await Axios.post('/create-post', { title, body, token: localStorage.getItem('complexappToken') });
-      console.log('New post was created');
+      const response = await Axios.post('/create-post', { title, body, token: localStorage.getItem('complexappToken') });
+      //redirect
+      navigate(`/post/${response.data}`);
     } catch (err) {
       console.log('There was a problem.');
     }
@@ -22,7 +25,16 @@ function CreatePost() {
           <label htmlFor="post-title" className="text-muted mb-1">
             <small>Title</small>
           </label>
-          <input onChange={(e) => setTitle(e.target.value)} autoFocus name="title" id="post-title" className="form-control form-control-lg form-control-title" type="text" placeholder="" autoComplete="off" />
+          <input
+            onChange={(e) => setTitle(e.target.value)}
+            autoFocus
+            name="title"
+            id="post-title"
+            className="form-control form-control-lg form-control-title"
+            type="text"
+            placeholder=""
+            autoComplete="off"
+          />
         </div>
 
         <div className="form-group">
