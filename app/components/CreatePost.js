@@ -2,6 +2,7 @@ import Axios from 'axios';
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DispatchContext from '../DispatchContext';
+import StateContext from '../StateContext';
 import Page from './Page';
 
 function CreatePost(props) {
@@ -9,11 +10,12 @@ function CreatePost(props) {
   const [body, setBody] = useState();
   const navigate = useNavigate();
   const appDispatch = useContext(DispatchContext);
+  const appState = useContext(StateContext);
 
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const response = await Axios.post('/create-post', { title, body, token: localStorage.getItem('complexappToken') });
+      const response = await Axios.post('/create-post', { title, body, token: appState.user.token });
       //redirect
       appDispatch({ type: 'flashMessage', value: 'Congrats, you created a new post!' });
       navigate(`/post/${response.data}`);
