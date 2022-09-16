@@ -1,11 +1,16 @@
 import Axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useImmerReducer } from 'use-immer';
+import DispatchContext from '../DispatchContext';
+import StateContext from '../StateContext';
 import LoadingDotsIcon from './LoadingDotsIcon';
 import Page from './Page';
 
 function ViewSinglePost() {
+  const appState = useContext(StateContext);
+  const appDispatch = useContext(DispatchContext);
+
   const originalState = {
     title: {
       value: '',
@@ -30,10 +35,46 @@ function ViewSinglePost() {
         draft.body.value = action.value.body;
         draft.isFetching = false;
         return;
+      case 'titleChange':
+        if (action.value.trim()) draft.title.hasErrors = false;
+        draft.title.value = action.value;
+        return;
+      case 'bodyChange':
+        if (action.value.trim()) draft.body.hasErrors = false;
+        draft.body.value = action.value;
+        return;
+      case 'submitRequest':
+        if (!draft.title.hasErrors && !draft.body.hasErrors) draft.sendCount++;
+        return;
+      case 'saveRequestStarted':
+        draft.isSaving = true;
+        return;
+      case 'saveRequestFinished':
+        draft.isSaving = false;
+        return;
+      case 'titleRules':
+        if (!action.value.trim()) {
+          draft.title.hasErrors = true;
+          draft.title.message = 'You must provide a title.';
+        }
+        return;
+      case 'bodyRules':
+        if (!action.value.trim()) {
+          draft.body.hasErrors = true;
+          draft.body.message = 'You must provide a body content.';
+        }
+        return;
     }
   }
 
   const [state, dispatch] = useImmerReducer(ourReducer, originalState);
+
+  function submitHandler(e) {
+    e.preventDefault();
+    dispatch({ type: 'titleRules', value: state.title.value });
+    dispatch({ type: 'bodyRules', value: state.body.value });
+    dispatch({ type: 'submitRequest' });
+  }
 
   useEffect(() => {
     const ourRequest = Axios.CancelToken.source();
@@ -51,6 +92,27 @@ function ViewSinglePost() {
     };
   }, []);
 
+  useEffect(() => {
+    if (state.sendCount) {
+      dispatch({ type: 'saveRequestStarted' });
+      const ourRequest = Axios.CancelToken.source();
+
+      async function fetchPost() {
+        try {
+          const response = await Axios.post(`/post/${state.id}/edit`, { title: state.title.value, body: state.body.value, token: appState.user.token }, { cancelToken: ourRequest.token });
+          dispatch({ type: 'saveRequestFinished' });
+          appDispatch({ type: 'flashMessage', value: 'Post was updated.' });
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      fetchPost();
+      return () => {
+        ourRequest.cancel();
+      };
+    }
+  }, [state.sendCount]);
+
   if (state.isFetching) {
     return (
       <Page title="...">
@@ -61,22 +123,45 @@ function ViewSinglePost() {
 
   return (
     <Page title="Edit New Post">
-      <form>
+      <form onSubmit={submitHandler}>
         <div className="form-group">
           <label htmlFor="post-title" className="text-muted mb-1">
             <small>Title</small>
           </label>
-          <input value={state.title.value} autoFocus name="title" id="post-title" className="form-control form-control-lg form-control-title" type="text" placeholder="" autoComplete="off" />
+          <input
+            onChange={(e) => dispatch({ type: 'titleChange', value: e.target.value })}
+            onBlur={(e) => dispatch({ type: 'titleRules', value: e.target.value })}
+            value={state.title.value}
+            autoFocus
+            name="title"
+            id="post-title"
+            className="form-control form-control-lg form-control-title"
+            type="text"
+            placeholder=""
+            autoComplete="off"
+          />
+          {state.title.hasErrors && <div className="alert alert-danger small liveValidateMessage">{state.title.message}</div>}
         </div>
 
         <div className="form-group">
           <label htmlFor="post-body" className="text-muted mb-1 d-block">
             <small>Body Content</small>
           </label>
-          <textarea name="body" id="post-body" className="body-content tall-textarea form-control" type="text" value={state.body.value} />
+          <textarea
+            onChange={(e) => dispatch({ type: 'bodyChange', value: e.target.value })}
+            onBlur={(e) => dispatch({ type: 'bodyRules', value: e.target.value })}
+            value={state.body.value}
+            name="body"
+            id="post-body"
+            className="body-content tall-textarea form-control"
+            type="text"
+          />
+          {state.body.hasErrors && <div className="alert alert-danger small liveValidateMessage">{state.body.message}</div>}
         </div>
 
-        <button className="btn btn-primary">Save Updates</button>
+        <button className="btn btn-primary" disabled={state.isSaving}>
+          Save Updates
+        </button>
       </form>
     </Page>
   );
