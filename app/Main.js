@@ -20,6 +20,7 @@ import Profile from './components/Profile';
 import EditPost from './components/EditPost';
 import NotFound from './components/NotFound';
 import Search from './components/Search';
+import { CSSTransition } from 'react-transition-group';
 
 function Main() {
   const initialState = {
@@ -84,7 +85,9 @@ function Main() {
             <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          {state.isSearchOpen ? <Search /> : ''}
+          <CSSTransition timeout={330} in={state.isSearchOpen} classNames={'search-overlay'} unmountOnExit={true}>
+            <Search />
+          </CSSTransition>
           <Footer />
         </BrowserRouter>
       </DispatchContext.Provider>
