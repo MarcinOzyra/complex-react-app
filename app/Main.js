@@ -21,6 +21,7 @@ import EditPost from './components/EditPost';
 import NotFound from './components/NotFound';
 import Search from './components/Search';
 import { CSSTransition } from 'react-transition-group';
+import Chat from './components/Chat';
 
 function Main() {
   const initialState = {
@@ -32,6 +33,7 @@ function Main() {
       avatar: localStorage.getItem('complexappAvatar'),
     },
     isSearchOpen: false,
+    isChatOpen: false,
   };
 
   function ourReducer(draft, action) {
@@ -51,6 +53,12 @@ function Main() {
         return;
       case 'closeSearch':
         draft.isSearchOpen = false;
+        return;
+      case 'toggleChat':
+        draft.isChatOpen = !draft.isChatOpen;
+        return;
+      case 'closeChat':
+        draft.isChatOpen = false;
         return;
     }
   }
@@ -88,6 +96,7 @@ function Main() {
           <CSSTransition timeout={330} in={state.isSearchOpen} classNames={'search-overlay'} unmountOnExit={true}>
             <Search />
           </CSSTransition>
+          <Chat />
           <Footer />
         </BrowserRouter>
       </DispatchContext.Provider>
