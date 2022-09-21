@@ -5,7 +5,7 @@ import StateContext from './StateContext';
 import DispatchContext from './DispatchContext';
 import { useImmerReducer } from 'use-immer';
 import Axios from 'axios';
-Axios.defaults.baseURL = 'http://localhost:8080';
+Axios.defaults.baseURL = process.env.BACKENDURL || 'https://ozireactbackendtest.onrender.com';
 //components
 import Header from './components/Header';
 import HomeGuest from './components/HomeGuest';
